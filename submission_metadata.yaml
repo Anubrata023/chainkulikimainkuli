@@ -1,0 +1,61 @@
+# Redrob Hackathon — Submission Metadata
+
+team_name: "RankCraft"
+
+primary_contact:
+  name: "Anubrata Paul"
+  email: "anubratapaul23@email.com"
+  phone: "+91-8822757049"
+
+team_members:
+  - name: "Anubrata Paul"
+    email: "anubratapaul23@email.com"
+    role: "ML Engineer — scoring algorithm, honeypot detection, career analysis"
+  - name: "Rachel Debnath"
+    email: "rachel.debnath@email.com"
+    role: "Backend Engineer — pipeline, sandbox, validation, submission"
+
+github_repo: "https://github.com/Anubrata023/redrob-ranker-"
+
+sandbox_link: "https://huggingface.co/spaces/YOUR_USERNAME/redrob-ranker"
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+compute:
+  platform: "Local machine / Colab CPU"
+  cpu_cores: 4
+  ram_gb: 16
+  python_version: "3.11"
+  os: "Ubuntu 22.04 / macOS"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude for architecture discussion, reviewing scoring logic, and code review.
+  All scoring weights, component design, and engineering decisions were made by the team
+  after carefully reading the JD, sample_candidates.json, and redrob_signals_doc.
+  No candidate data was fed to any LLM during the ranking step.
+
+methodology_summary: |
+  Five-component rule-based ranker with behavioral multiplier. Title/role fit (0-30pts)
+  is the primary guard against keyword stuffers — a Marketing Manager with perfect AI
+  skills scores -20 on title, then further penalised to -50. Career history (0-30pts)
+  rewards production ML months at product companies; pure consulting backgrounds receive
+  career score = 0 (JD disqualifier). Skills (0-20pts) are trust-weighted by endorsements
+  and usage duration, not just listed. Experience years (0-10pts) peak at 6-8yr.
+  Location (-5 to +5pts) favours India/preferred cities and penalises non-India unwilling.
+  A behavioral multiplier (0.3-1.2x) down-weights inactive, slow-notice, low-response
+  candidates. Honeypots are detected and zeroed. Runtime ~120s for 100K candidates on CPU,
+  no network, no GPU.
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true
