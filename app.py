@@ -20,11 +20,6 @@ if not os.path.exists("rankcraft_landing_hero.png") and os.path.exists(src_img_h
         shutil.copy(src_img_hero, "rankcraft_landing_hero.png")
     except Exception:
         pass
-if not os.path.exists("src/rankcraft_landing_hero.png") and os.path.exists(src_img_hero):
-    try:
-        shutil.copy(src_img_hero, "src/rankcraft_landing_hero.png")
-    except Exception:
-        pass
 
 # Import ranker helpers
 from rank import (
@@ -162,38 +157,48 @@ if "inspect_id" not in st.session_state:
 if "jd_text_content" not in st.session_state:
     st.session_state["jd_text_content"] = load_jd_text()
 
-# Inject Global CSS for the White and Orange design system
+# Inject Global CSS for the White and Orange design system with bulletproof contrast
 st.markdown(clean_html("""
 <style>
-    /* Global light slate & orange theme styles */
+    /* Force high-contrast light slate background & dark slate text colors */
     .stApp {
         background-color: #F8FAFC !important;
-        color: #1E293B !important;
-        font-family: 'Inter', sans-serif;
     }
     
-    /* Clean white sidebar */
+    /* Enforce dark slate color on all native HTML elements on main page */
+    .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp div {
+        color: #1E293B !important;
+    }
+    
+    /* Clean white sidebar override */
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
         border-right: 1px solid #E2E8F0 !important;
     }
     
-    /* Input and text area default contrast values */
+    /* Force dark color on all sidebar labels & texts */
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] label, 
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3, 
+    section[data-testid="stSidebar"] h4, 
+    section[data-testid="stSidebar"] h5, 
+    section[data-testid="stSidebar"] h6 {
+        color: #334155 !important;
+    }
+    
+    /* Input and text area styling */
     div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         background-color: #FFFFFF !important;
         color: #1E293B !important;
         border: 1px solid #CBD5E1 !important;
     }
     
-    /* Heading style colors */
-    h1, h2, h3, h4, h5, h6 {
-        color: #1E293B !important;
-        font-family: 'Outfit', sans-serif;
-    }
-    
     .metric-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
         border-radius: 12px;
         padding: 20px;
         margin: 5px 0 15px 0;
@@ -201,24 +206,28 @@ st.markdown(clean_html("""
     }
     
     .profile-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
         border-radius: 16px;
         padding: 26px;
         margin-top: 10px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    .profile-card div, .profile-card span, .profile-card p, .profile-card h1, .profile-card h2, .profile-card h3 {
+        color: #1E293B !important;
     }
     
     .card-title {
-        color: #1E293B;
+        color: #1E293B !important;
         font-size: 18px;
         font-weight: 700;
         margin-bottom: 12px;
-        border-bottom: 1px solid #E2E8F0;
+        border-bottom: 1px solid #E2E8F0 !important;
         padding-bottom: 8px;
     }
     
-    /* Custom light theme badges */
+    /* Custom light theme badges with important to prevent overrides */
     .badge {
         display: inline-block;
         padding: 4px 10px;
@@ -229,15 +238,15 @@ st.markdown(clean_html("""
         margin-bottom: 6px;
         text-transform: capitalize;
     }
-    .badge-green { background-color: #E6F4EA; color: #137333; border: 1px solid #CEEAD6; }
-    .badge-blue { background-color: #E8F0FE; color: #1A73E8; border: 1px solid #D2E3FC; }
-    .badge-orange { background-color: #FDF2E9; color: #D56B1A; border: 1px solid #FADBD8; }
-    .badge-red { background-color: #FCE8E6; color: #C5221F; border: 1px solid #FAD2CF; }
-    .badge-grey { background-color: #F1F3F4; color: #5F6368; border: 1px solid #E8EAED; }
-    .badge-purple { background-color: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+    .badge-green { background-color: #E6F4EA !important; color: #137333 !important; border: 1px solid #CEEAD6 !important; }
+    .badge-blue { background-color: #E8F0FE !important; color: #1A73E8 !important; border: 1px solid #D2E3FC !important; }
+    .badge-orange { background-color: #FDF2E9 !important; color: #D56B1A !important; border: 1px solid #FADBD8 !important; }
+    .badge-red { background-color: #FCE8E6 !important; color: #C5221F !important; border: 1px solid #FAD2CF !important; }
+    .badge-grey { background-color: #F1F3F4 !important; color: #5F6368 !important; border: 1px solid #E8EAED !important; }
+    .badge-purple { background-color: #F3E8FF !important; color: #6B21A8 !important; border: 1px solid #E9D5FF !important; }
     
     .timeline-container {
-        border-left: 2px solid #E2E8F0;
+        border-left: 2px solid #E2E8F0 !important;
         padding-left: 20px;
         margin-left: 10px;
         margin-top: 15px;
@@ -254,47 +263,46 @@ st.markdown(clean_html("""
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background-color: #FF6B4A;
-        border: 2px solid #FFFFFF;
+        background-color: #FF6B4A !important;
+        border: 2px solid #FFFFFF !important;
     }
     .timeline-item.current::before {
-        background-color: #10B981;
-        box-shadow: 0 0 8px #10B981;
+        background-color: #10B981 !important;
+        box-shadow: 0 0 8px #10B981 !important;
     }
     .timeline-title {
         font-weight: 700;
         font-size: 14px;
-        color: #1E293B;
+        color: #1E293B !important;
     }
     .timeline-meta {
         font-size: 11px;
-        color: #64748B;
+        color: #64748B !important;
         margin-bottom: 6px;
     }
     .timeline-desc {
         font-size: 12px;
-        color: #475569;
+        color: #475569 !important;
         line-height: 1.5;
     }
     
     .section-title {
         font-size: 14px;
         font-weight: bold;
-        color: #64748B;
+        color: #64748B !important;
         text-transform: uppercase;
         margin-top: 15px;
         margin-bottom: 5px;
         letter-spacing: 0.05em;
     }
     .highlight-keyword {
-        background-color: rgba(255, 107, 74, 0.15);
-        color: #D56B1A;
+        background-color: rgba(255, 107, 74, 0.15) !important;
+        color: #D56B1A !important;
         border-radius: 3px;
         padding: 0px 4px;
         font-weight: 500;
     }
     
-    /* Style tab underlines with Orange Accent */
     .stTabs [data-baseweb="tab"] {
         color: #64748B !important;
         font-size: 14px;
@@ -344,8 +352,6 @@ def parse_jd_text_local(jd_text):
 def load_sample_data():
     try:
         sample_path = "data/sample.jsonl"
-        if not os.path.exists(sample_path) and os.path.exists("src/data/sample.jsonl"):
-            sample_path = "src/data/sample.jsonl"
         candidates = []
         with open(sample_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -395,13 +401,8 @@ if st.session_state["view"] == "landing":
             st.rerun()
             
     with col_hero_card:
-        # Render the custom vector dashboard illustration
-        img_path = "rankcraft_landing_hero.png"
-        if os.path.exists("src/rankcraft_landing_hero.png"):
-            img_path = "src/rankcraft_landing_hero.png"
-            
-        if os.path.exists(img_path):
-            st.image(img_path, use_container_width=True)
+        if os.path.exists("rankcraft_landing_hero.png"):
+            st.image("rankcraft_landing_hero.png", use_container_width=True)
         else:
             st.markdown(clean_html("""
                 <div style="background: #FFFFFF; border-radius: 24px; padding: 4rem 2rem; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
@@ -1007,27 +1008,62 @@ else:
                         """
                     timeline_html += "</div>"
                     
-                    # Live Outreach Swarm Drafter Widget
+                    # Direct Recruiter Outreach Email Generator
                     first_name = p["anonymized_name"].split()[0]
                     tone_key = f"outreach_tone_classic_{inspect_id}"
-                    st.markdown("<div class='section-title'>✉️ Swarm Outreach Drafter</div>", unsafe_allow_html=True)
-                    outreach_tone = st.selectbox(
-                        "Configure Outreach Communication Tone",
-                        ["Highly Technical & Direct", "Warm & Personal", "Brief LinkedIn Connection Request"],
+                    st.markdown("<div class='section-title'>✉️ Swarm Outreach Email Drafter</div>", unsafe_allow_html=True)
+                    
+                    outreach_type = st.selectbox(
+                        "Select Direct Recruitment Email Template",
+                        ["Direct Interview Invitation", "Detailed Job Pitch & Comp Request", "Brief Direct Referral Inquiry"],
                         key=tone_key
                     )
                     
-                    if outreach_tone == "Highly Technical & Direct":
-                        top_skill = list(candidate_skills_dict.keys())[0].upper() if candidate_skills_dict else "APPLIED ML"
-                        draft_text = f"Hi {first_name},\n\nI was looking through your ML work. Given your hands-on expertise with {top_skill} at {p['current_company']}, I think you'd be interested in our Senior AI role. Pune/Noida hybrid, sub-30d notice. Let me know if you are open to chat.\n\nBest,\nJordan"
-                    elif outreach_tone == "Warm & Personal":
-                        draft_text = f"Hello {first_name},\n\nHope you're having a great week! I was super impressed by your trajectory, particularly your {p['years_of_experience']:.0f} years of engineering experience. We are building the founding AI team at RankCraft AI and would love to jump on a quick call to share our vision. Let me know what your schedule looks like.\n\nBest regards,\nJordan Dawson"
+                    top_skill = list(candidate_skills_dict.keys())[0].upper() if candidate_skills_dict else "APPLIED ML"
+                    current_company = p["current_company"]
+                    
+                    if outreach_type == "Direct Interview Invitation":
+                        email_subject = f"Interview Invitation: Senior AI Engineer position at RankCraft"
+                        email_body = (
+                            f"Dear {first_name},\n\n"
+                            f"My name is Jordan Dawson, and I am the Lead Talent Architect at RankCraft. "
+                            f"We are currently hiring for our core AI division and I was exceptionally impressed by your engineering background at {current_company}, particularly your hands-on expertise in {top_skill}.\n\n"
+                            f"Based on our consensus-based ranking, your profile stands in the top tier of our target talent pipeline. "
+                            f"We would love to invite you for an initial interview to discuss how you can help scale our systems. "
+                            f"Please let me know your availability for a 20-minute discussion this week.\n\n"
+                            f"Warm regards,\n\n"
+                            f"Jordan Dawson\n"
+                            f"Lead Talent Architect, RankCraft AI"
+                        )
+                    elif outreach_type == "Detailed Job Pitch & Comp Request":
+                        email_subject = f"Career Opportunity: Founding AI/ML Team at RankCraft"
+                        email_body = (
+                            f"Dear {first_name},\n\n"
+                            f"I am reaching out to you directly from the hiring team at RankCraft AI. "
+                            f"We have open roles for senior machine learning professionals to lead the development of our offline analytics and multi-agent swarm platforms.\n\n"
+                            f"Given your background at {current_company} and your overall experience, I wanted to discuss compensation, relocations to Pune/Noida, and core job details directly. "
+                            f"If you are open to exploring new engineering opportunities, please reply with a convenient time or call number.\n\n"
+                            f"Best regards,\n\n"
+                            f"Jordan Dawson\n"
+                            f"Hiring Team, RankCraft AI"
+                        )
                     else:
-                        draft_text = f"Hi {first_name} - came across your background at {p['current_company']} and noticed your solid skill profile. We are hiring a Founding AI/ML Engineer. Let's connect!"
+                        email_subject = f"Quick Inquiry: ML Engineering roles at RankCraft"
+                        email_body = (
+                            f"Dear {first_name},\n\n"
+                            f"I hope you are doing well. I lead recruiting at RankCraft AI. "
+                            f"We are actively seeking ML talent with hands-on skill in {top_skill}.\n\n"
+                            f"I wanted to connect directly to see if you are open to senior roles in Noida/Pune or if you could recommend peers from {current_company} who might be interested in exploring this with us. "
+                            f"Thank you for your time.\n\n"
+                            f"Best regards,\n\n"
+                            f"Jordan Dawson\n"
+                            f"RankCraft AI Recruitment"
+                        )
                     
                     outreach_box_html = f"""
                     <div style="background-color:#F8FAFC; border-radius:6px; padding:12px; margin-top:8px; border:1px solid #E2E8F0;">
-                        <pre style="color:#1E293B; font-size:12px; font-family:'Courier New', monospace; white-space:pre-wrap; margin:0;">{draft_text}</pre>
+                        <div style="font-size:11px; font-weight:700; color:#FF6B4A; margin-bottom:4px;">SUBJECT: {email_subject}</div>
+                        <pre style="color:#1E293B; font-size:12px; font-family:'Courier New', monospace; white-space:pre-wrap; margin:0; background:none; border:none; padding:0;">{email_body}</pre>
                     </div>
                     """
                     st.markdown(outreach_box_html, unsafe_allow_html=True)
