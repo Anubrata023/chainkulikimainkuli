@@ -240,6 +240,22 @@ st.markdown(clean_html("""
         -webkit-text-fill-color: #1E293B !important;
     }
     
+    /* Sidebar button text contrast */
+    [data-testid="stSidebar"] button p,
+    [data-testid="stSidebar"] button span,
+    [data-testid="stSidebar"] button div {
+        color: #1E293B !important;
+        -webkit-text-fill-color: #1E293B !important;
+    }
+    
+    /* Enforce dark text inside sidebar file uploader widgets */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] span,
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] p,
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        color: #1E293B !important;
+        -webkit-text-fill-color: #1E293B !important;
+    }
+    
     /* Selectbox selected choice styling */
     div[data-baseweb="select"] > div {
         background-color: #FFFFFF !important;
