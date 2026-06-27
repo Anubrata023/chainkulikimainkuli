@@ -16,9 +16,13 @@ import argparse
 import csv
 import gzip
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
+import networkx as nx
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
@@ -103,6 +107,88 @@ PREF_LOCATIONS = {
     'pune', 'noida', 'hyderabad', 'delhi', 'gurugram', 'gurgaon',
     'mumbai', 'bangalore', 'bengaluru', 'ncr',
 }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KNOWLEDGE GRAPH & SEMANTIC UTILITIES
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_tech_graph() -> nx.Graph:
+    G = nx.Graph()
+    clusters = {
+        'deep_learning': ['pytorch', 'tensorflow', 'keras', 'mxnet', 'jax', 'deep learning', 'neural networks'],
+        'vector_dbs': ['pinecone', 'weaviate', 'qdrant', 'milvus', 'faiss', 'chromadb', 'lancedb', 'vector database', 'vector search'],
+        'search_engines': ['elasticsearch', 'opensearch', 'solr', 'sphinx', 'search engine', 'hybrid search', 'bm25'],
+        'retrieval_ranking': ['information retrieval', 'learning to rank', 'ndcg', 'mrr', 'map@k', 're-ranking', 'ranking model', 'recommendation system'],
+        'nlp': ['nlp', 'transformers', 'hugging face', 'bert', 'gpt', 'llm', 'fine-tuning', 'prompt engineering', 'rag', 'sentence transformers'],
+        'traditional_ml': ['xgboost', 'lightgbm', 'catboost', 'scikit-learn', 'numpy', 'pandas', 'feature engineering', 'mlops', 'mlflow']
+    }
+    for cluster_name, skills in clusters.items():
+        for i in range(len(skills)):
+            for j in range(i + 1, len(skills)):
+                G.add_edge(skills[i], skills[j])
+    return G
+
+TECH_GRAPH = build_tech_graph()
+ALL_PAIRS_PATHS = dict(nx.all_pairs_shortest_path_length(TECH_GRAPH))
+
+class ContextualImpactExtractor:
+    @staticmethod
+    def get_multiplier(desc: str) -> float:
+        if not desc:
+            return 1.0
+        desc_lower = desc.lower()
+        high_impact_verbs = [
+            'architected', 'deployed', 'implemented', 'scaled', 'optimized',
+            'built', 'designed', 'led', 'engineered', 'shipped', 'productionized'
+        ]
+        low_impact_verbs = [
+            'learned', 'studied', 'assisted', 'helped', 'familiar with', 'exposed to',
+            'understanding', 'coursework', 'academic', 'university'
+        ]
+        high_count = sum(1 for verb in high_impact_verbs if verb in desc_lower)
+        low_count = sum(1 for verb in low_impact_verbs if verb in desc_lower)
+        if high_count > low_count:
+            return 1.2
+          # We check if low_count is positive to apply penalty, avoiding false positives on empty/neutral text
+        elif low_count > high_count:
+            return 0.6
+        return 1.0
+
+class DynamicJDCalibrator:
+    @staticmethod
+    def calibrate(jd_text: str) -> dict:
+        inferred = {}
+        if not jd_text:
+            return inferred
+        jd_lower = jd_text.lower()
+        if 'vector' in jd_lower and ('scale' in jd_lower or 'scaling' in jd_lower or 'database' in jd_lower):
+            inferred['kubernetes'] = 3.0
+            inferred['kafka'] = 3.0
+            inferred['distributed systems'] = 4.0
+        if 'fine-tuning' in jd_lower or 'llm' in jd_lower or 'transformers' in jd_lower:
+            inferred['cuda'] = 3.0
+            inferred['triton'] = 3.0
+        if 'production' in jd_lower and ('ml' in jd_lower or 'machine learning' in jd_lower):
+            inferred['mlflow'] = 2.0
+            inferred['docker'] = 2.0
+            inferred['kubeflow'] = 2.0
+        return inferred
+
+DEFAULT_JD = """
+Job Description: Senior AI Engineer — Founding Team
+Pune/Noida, India. Deep technical depth in modern ML systems — embeddings, retrieval, ranking, LLMs, fine-tuning.
+Production experience with embeddings-based retrieval systems, vector databases, scaling vector databases, evaluation frameworks (NDCG, MRR, MAP).
+"""
+
+def load_jd_text() -> str:
+    path = Path("data/job_description.txt")
+    if path.exists():
+        try:
+            return path.read_text(encoding="utf-8")
+        except Exception:
+            pass
+    return DEFAULT_JD
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -196,7 +282,7 @@ def score_career(career_history: list, config: dict = None, current_company: str
         jd = job['description'].lower()
         jind = job.get('industry', '')
         jcomp = job['company'].lower()
-        dur = job['duration_months']
+        dur = job['duration_months'] * ContextualImpactExtractor.get_multiplier(jd)
         all_companies.append(jcomp)
 
         if jind in PRODUCT_INDUSTRIES:
@@ -249,8 +335,20 @@ def score_skills(skills: list, assessment_scores: dict, config: dict = None) -> 
         sname = sk['name'].lower()
         base_val = 0
         for kw, val in skill_map.items():
+            mult = 0.0
             if kw in sname:
-                base_val = max(base_val, val)
+                mult = 1.0
+            else:
+                sname_nodes = [node for node in TECH_GRAPH.nodes() if node in sname]
+                if sname_nodes and kw in TECH_GRAPH:
+                    for node1 in sname_nodes:
+                        dist = ALL_PAIRS_PATHS.get(node1, {}).get(kw)
+                        if dist == 1:
+                            mult = max(mult, 0.7)
+                        elif dist == 2:
+                            mult = max(mult, 0.4)
+            if mult > 0:
+                base_val = max(base_val, val * mult)
         if base_val == 0:
             continue
         prof_mult = {
@@ -462,11 +560,74 @@ def build_reasoning(c: dict, scores: dict, rank: int) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# MULTI-AGENT SWARM ARCHETYPE ORCHESTRATION
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SecurityAuditorAgent:
+    """
+    Agent 3 (The Security Auditor): Runs honeypot and fraud detection logic
+    to quarantine suspicious/synthetic candidate profiles.
+    """
+    def audit(self, candidate: dict) -> tuple[bool, str]:
+        return is_honeypot(candidate)
+
+class TechLeadAgent:
+    """
+    Agent 1 (The Tech Lead): Analyzes job title alignment, GitHub activity, 
+    and technical stack proximity using the relational technology graph.
+    """
+    def evaluate(self, candidate: dict, config: dict, similarity_score: float) -> dict:
+        p = candidate['profile']
+        sig = candidate['redrob_signals']
+        
+        t_score = score_title(p['current_title'], config)
+        if t_score < 0:
+            t_score = -50.0
+            
+        sk_score = score_skills(candidate.get('skills', []), sig.get('skill_assessment_scores', {}), config)
+        
+        github_bonus = 0.0
+        github = sig.get('github_activity_score', -1)
+        if github >= 50:
+            github_bonus = 5.0
+            
+        return {
+            'title_score': t_score,
+            'skills_score': sk_score,
+            'github_bonus': github_bonus,
+            'semantic_similarity_score': similarity_score
+        }
+
+class HRPartnerAgent:
+    """
+    Agent 2 (The HR Partner): Analyzes flight risk, notice period, 
+    consulting vs. product background, location fit, and overall YoE.
+    """
+    def evaluate(self, candidate: dict, config: dict) -> dict:
+        p = candidate['profile']
+        sig = candidate['redrob_signals']
+        
+        c_score = score_career(candidate['career_history'], config, current_company=p.get('current_company'))
+        e_score = score_experience(p['years_of_experience'], config)
+        l_score = score_location(p['country'], p['location'], sig.get('willing_to_relocate', False), config)
+        
+        b_mult = compute_behavioral_multiplier(sig, config)
+        
+        return {
+            'career_score': c_score,
+            'experience_score': e_score,
+            'location_score': l_score,
+            'behavioral_mult': b_mult
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MAIN SCORING FUNCTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-def score_candidate(c: dict, config: dict = None) -> tuple[float, dict]:
-    hp, reason = is_honeypot(c)
+def score_candidate(c: dict, config: dict = None, similarity_score: float = 0.0) -> tuple[float, dict]:
+    auditor = SecurityAuditorAgent()
+    hp, reason = auditor.audit(c)
     if hp:
         return -9999.0, {'honeypot': reason}
 
@@ -481,18 +642,24 @@ def score_candidate(c: dict, config: dict = None) -> tuple[float, dict]:
     w_skills = config.get('weight_skills', 1.0)
     w_experience = config.get('weight_experience', 1.0)
     w_location = config.get('weight_location', 1.0)
+    w_semantic = config.get('weight_semantic', 1.0)
 
-    t_score = score_title(p['current_title'], config)
-    if t_score < 0:
-        t_score = -50.0
+    tech_lead = TechLeadAgent()
+    tl_results = tech_lead.evaluate(c, config, similarity_score)
+    t_score = tl_results['title_score']
+    sk_score = tl_results['skills_score']
+    github_bonus = tl_results['github_bonus']
 
-    c_score = score_career(c['career_history'], config, current_company=p.get('current_company'))
-    sk_score = score_skills(c.get('skills', []), sig.get('skill_assessment_scores', {}), config)
-    e_score = score_experience(p['years_of_experience'], config)
-    l_score = score_location(p['country'], p['location'], sig.get('willing_to_relocate', False), config)
-    b_mult = compute_behavioral_multiplier(sig, config)
+    hr_partner = HRPartnerAgent()
+    hr_results = hr_partner.evaluate(c, config)
+    c_score = hr_results['career_score']
+    e_score = hr_results['experience_score']
+    l_score = hr_results['location_score']
+    b_mult = hr_results['behavioral_mult']
 
-    base = (t_score * w_title) + (c_score * w_career) + (sk_score * w_skills) + (e_score * w_experience) + (l_score * w_location)
+    semantic_val = similarity_score * 30.0
+
+    base = (t_score * w_title) + (c_score * w_career) + (sk_score * w_skills) + (e_score * w_experience) + (l_score * w_location) + (semantic_val * w_semantic) + github_bonus
     total = max(0.0, base) * b_mult
     total = min(total, 100.0)
 
@@ -502,6 +669,8 @@ def score_candidate(c: dict, config: dict = None) -> tuple[float, dict]:
         'skills': sk_score * w_skills,
         'experience': e_score * w_experience,
         'location': l_score * w_location,
+        'semantic_alignment': semantic_val * w_semantic,
+        'github_bonus': github_bonus,
         'behavioral_mult': b_mult,
         'base': base,
         'total': total,
@@ -510,6 +679,7 @@ def score_candidate(c: dict, config: dict = None) -> tuple[float, dict]:
         'raw_skills': sk_score,
         'raw_experience': e_score,
         'raw_location': l_score,
+        'raw_semantic': semantic_val
     }
     return total, components
 
@@ -567,9 +737,40 @@ def main():
     honeypot_count = 0
     total_count = 0
 
-    for c in load_candidates(args.candidates):
+    # Load all candidates
+    candidates = list(load_candidates(args.candidates))
+
+    # Load JD and dynamically calibrate
+    jd_text = load_jd_text()
+    inferred_skills = DynamicJDCalibrator.calibrate(jd_text)
+    if inferred_skills:
+        print(f"Dynamic JD Calibration: Inferred latent needs: {list(inferred_skills.keys())}", file=sys.stderr)
+        for skill, weight in inferred_skills.items():
+            if skill not in CORE_SKILL_MAP:
+                CORE_SKILL_MAP[skill] = weight
+
+    # Compute global TF-IDF semantic similarities
+    print("Fitting TF-IDF Semantic similarity model...", file=sys.stderr)
+    corpus = []
+    for c in candidates:
+        p = c['profile']
+        career_desc = " ".join(j.get('description', '') for j in c.get('career_history', []))
+        text = f"{p.get('headline', '')} {p.get('summary', '')} {career_desc}"
+        corpus.append(text)
+    corpus.append(jd_text)
+
+    vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
+    tfidf_matrix = vectorizer.fit_transform(corpus)
+    jd_vec = tfidf_matrix[-1]
+    candidates_matrix = tfidf_matrix[:-1]
+
+    similarities = cosine_similarity(candidates_matrix, jd_vec).flatten()
+    print("Semantic similarity calculation completed.", file=sys.stderr)
+
+    for i, c in enumerate(candidates):
         total_count += 1
-        total_score, components = score_candidate(c)
+        sim_score = float(similarities[i])
+        total_score, components = score_candidate(c, similarity_score=sim_score)
 
         if components.get('honeypot'):
             honeypot_count += 1
@@ -612,7 +813,7 @@ def main():
             print(
                 f"  #{row['rank']:3d} {row['candidate_id']} score={row['score']:7.2f} | "
                 f"T:{comp['title']:+5.0f} C:{comp['career']:5.1f} Sk:{comp['skills']:5.1f} "
-                f"E:{comp['experience']:3.0f} L:{comp['location']:2.0f} Bx:{comp['behavioral_mult']:.3f}",
+                f"E:{comp['experience']:3.0f} L:{comp['location']:2.0f} Bx:{comp['behavioral_mult']:.3f} S:{comp['semantic_alignment']:4.1f}",
                 file=sys.stderr
             )
             print(f"       {row['reasoning'][:120]}", file=sys.stderr)

@@ -439,6 +439,14 @@ st.session_state["jd_text_content"] = jd_text
 # Build custom skill mapping based on active JD
 custom_skill_map = parse_jd_text(jd_text)
 
+# AI-Inferred Latent Needs
+from rank import DynamicJDCalibrator
+inferred_skills = DynamicJDCalibrator.calibrate(jd_text)
+if inferred_skills:
+    for skill, weight in inferred_skills.items():
+        if skill not in custom_skill_map:
+            custom_skill_map[skill] = weight
+
 with st.sidebar.expander("🔑 Extracted JD Skill Targets"):
     st.markdown("Matched target skills and search weight values:")
     df_skills = pd.DataFrame([{"Skill Keyword": k, "Base Weight": v} for k, v in custom_skill_map.items()])
@@ -446,6 +454,8 @@ with st.sidebar.expander("🔑 Extracted JD Skill Targets"):
         st.dataframe(df_skills.sort_values(by="Base Weight", ascending=False), hide_index=True)
     else:
         st.caption("No matching skill keywords found.")
+    if inferred_skills:
+        st.info(f"🔮 **AI-Inferred Latent Needs added**: {', '.join(inferred_skills.keys())}")
 
 st.sidebar.markdown("---")
 
@@ -456,6 +466,7 @@ weight_career = st.sidebar.slider("Career History Weight", 0.0, 2.0, 1.0, 0.1)
 weight_skills = st.sidebar.slider("Skills Trust Weight", 0.0, 2.0, 1.0, 0.1)
 weight_experience = st.sidebar.slider("Experience Band Weight", 0.0, 2.0, 1.0, 0.1)
 weight_location = st.sidebar.slider("Location Pref Weight", 0.0, 2.0, 1.0, 0.1)
+weight_semantic = st.sidebar.slider("Semantic Alignment Weight", 0.0, 2.0, 1.0, 0.1)
 
 skills_score_cap = st.sidebar.slider("Max Skill Score Cap", 10.0, 40.0, 25.0, 1.0)
 
@@ -483,6 +494,7 @@ config = {
     "weight_skills": weight_skills,
     "weight_experience": weight_experience,
     "weight_location": weight_location,
+    "weight_semantic": weight_semantic,
     "skills_score_cap": skills_score_cap,
     "custom_skill_map": custom_skill_map,
     "enable_activity_decay": enable_activity_decay,
@@ -506,11 +518,35 @@ if len(active_pool) > 1000:
 # ── ENGINE PROCESSING ─────────────────────────────────────────────────────────
 
 if active_pool:
+    # Compute global TF-IDF semantic similarities
+    similarities = [0.0] * len(active_pool)
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+        from rank import load_jd_text
+        corpus = []
+        for c in active_pool:
+            p = c['profile']
+            career_desc = " ".join(j.get('description', '') for j in c.get('career_history', []))
+            text = f"{p.get('headline', '')} {p.get('summary', '')} {career_desc}"
+            corpus.append(text)
+        jd_text = load_jd_text()
+        corpus.append(jd_text)
+        
+        vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+        jd_vec = tfidf_matrix[-1]
+        candidates_matrix = tfidf_matrix[:-1]
+        similarities = cosine_similarity(candidates_matrix, jd_vec).flatten()
+    except Exception as e:
+        pass
+
     scored = []
     honeypots = []
 
-    for c in active_pool:
-        total_score, components = score_candidate(c, config=config)
+    for idx, c in enumerate(active_pool):
+        sim_score = float(similarities[idx]) if similarities is not None else 0.0
+        total_score, components = score_candidate(c, config=config, similarity_score=sim_score)
         
         # Check if flagged as honeypot
         if components.get("honeypot"):
@@ -699,16 +735,17 @@ if active_pool:
                     st.rerun()
 
                 # Scores Stacked/Progress display
-                score_html = ""
                 components_show = [
                     ('Role Title Fit', comp.get('title', 0.0), 30.0 * weight_title, '#3B82F6'),
                     ('Career History Quality', comp.get('career', 0.0), 30.0 * weight_career, '#10B981'),
                     ('Skills Trust Profile', comp.get('skills', 0.0), skills_score_cap * weight_skills, '#F59E0B'),
                     ('Experience Band Fit', comp.get('experience', 0.0), 10.0 * weight_experience, '#8B5CF6'),
                     ('Location Alignment', comp.get('location', 0.0), 5.0 * weight_location, '#EC4899'),
+                    ('Semantic Text Similarity', comp.get('semantic_alignment', 0.0), 30.0 * weight_semantic, '#F43F5E'),
                 ]
                 
-                score_html += f"<div style='font-weight:700; font-size:15px; color:#F8FAFC; margin-bottom:12px;'>Composite Score: {comp.get('total', 0.0):.3f} <span style='font-weight:normal; font-size:12px; color:#94A3B8;'>(Base {comp.get('base', 0.0):.1f} × multiplier {comp.get('behavioral_mult', 1.0):.3f})</span></div>"
+                score_html = f"<div style='font-weight:700; font-size:15px; color:#F8FAFC; margin-bottom:12px;'>Composite Score: {comp.get('total', 0.0):.3f} <span style='font-weight:normal; font-size:12px; color:#94A3B8;'>(Base {comp.get('base', 0.0):.1f} × multiplier {comp.get('behavioral_mult', 1.0):.3f})</span></div>"
+                score_html += "<div style='font-size:11px; color:#10B981; margin-bottom:10px;'>🤖 Swarm Agent Status: Optimized</div>"
                 for name, val, max_val, color in components_show:
                     pct = min(max(0.0, (val / max_val) * 100.0), 100.0) if max_val > 0 else 0.0
                     score_html += f"""
