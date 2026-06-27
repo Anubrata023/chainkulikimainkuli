@@ -44,6 +44,40 @@ def clean_html(html_str):
     return "\n".join(line.strip() for line in html_str.splitlines())
 
 
+JD_PRESETS = {
+    "Senior AI Engineer — Founding Team (Default)": {
+        "text": """We need a Senior AI Engineer with deep technical depth in modern ML systems: embeddings, retrieval, ranking, LLMs, and fine-tuning. Production experience with sentence-transformers, FAISS, Pinecone, OpenSearch, learning-to-rank models (XGBoost/LightGBM), and evaluation metrics like NDCG, MRR, MAP. Product mindset, Series A, hybrid in Noida/Pune preferred. sub-30d notice. No CV/Speech-only, no pure research/consulting.""",
+        "custom_skills": CORE_SKILL_MAP,
+    },
+    "MLOps & Infrastructure Engineer": {
+        "text": """Looking for an infrastructure-focused ML engineer to deploy and maintain distributed inference clusters, vector databases, and automated MLOps pipelines. Needs strong experience in Docker, Kubernetes, AWS, Kafka, Redis, Milvus/Qdrant scaling, pipeline orchestration (Airflow/MLflow), and C++ or Rust scaling.""",
+        "custom_skills": {
+            'mlops': 10, 'docker': 9, 'kubernetes': 9, 'aws': 8, 'kafka': 8, 'redis': 8,
+            'milvus': 8, 'qdrant': 8, 'mlflow': 7, 'airflow': 7, 'gpc': 6, 'distributed': 8,
+            'python': 5, 'go': 6, 'rust': 7, 'c++': 6, 'scikit-learn': 4,
+        }
+    },
+    "Applied Data Scientist": {
+        "text": """Applied Data Scientist to build customer-facing prediction models and analytics dashboards. Needs hands-on experience in feature engineering, PyTorch, scikit-learn, SQL, NumPy, Pandas, A/B testing, statistical modeling, XGBoost, and LightGBM. HR-tech/marketplace experiences preferred.""",
+        "custom_skills": {
+            'machine learning': 10, 'data scientist': 10, 'python': 8, 'scikit-learn': 8,
+            'xgboost': 8, 'lightgbm': 8, 'pytorch': 7, 'a/b testing': 8, 'pandas': 6,
+            'numpy': 6, 'sql': 6, 'statistical modeling': 8, 'feature engineering': 8,
+            'tensorflow': 5, 'recommendation': 7,
+        }
+    }
+}
+
+def parse_jd_text_local(jd_text):
+    text_lower = jd_text.lower()
+    custom_map = {}
+    all_known = list(CORE_SKILL_MAP.keys()) + ['docker', 'kubernetes', 'aws', 'kafka', 'redis', 'go', 'rust', 'c++', 'airflow', 'distributed', 'sql']
+    for kw in all_known:
+        if kw in text_lower:
+            custom_map[kw] = CORE_SKILL_MAP.get(kw, 8)
+    return custom_map
+
+
 def parse_raw_resume_text(resume_text):
     lines = [line.strip() for line in resume_text.splitlines() if line.strip()]
     if not lines:
@@ -313,38 +347,7 @@ st.markdown(clean_html("""
 </style>
 """), unsafe_allow_html=True)
 
-JD_PRESETS = {
-    "Senior AI Engineer — Founding Team (Default)": {
-        "text": """We need a Senior AI Engineer with deep technical depth in modern ML systems: embeddings, retrieval, ranking, LLMs, and fine-tuning. Production experience with sentence-transformers, FAISS, Pinecone, OpenSearch, learning-to-rank models (XGBoost/LightGBM), and evaluation metrics like NDCG, MRR, MAP. Product mindset, Series A, hybrid in Noida/Pune preferred. sub-30d notice. No CV/Speech-only, no pure research/consulting.""",
-        "custom_skills": CORE_SKILL_MAP,
-    },
-    "MLOps & Infrastructure Engineer": {
-        "text": """Looking for an infrastructure-focused ML engineer to deploy and maintain distributed inference clusters, vector databases, and automated MLOps pipelines. Needs strong experience in Docker, Kubernetes, AWS, Kafka, Redis, Milvus/Qdrant scaling, pipeline orchestration (Airflow/MLflow), and C++ or Rust scaling.""",
-        "custom_skills": {
-            'mlops': 10, 'docker': 9, 'kubernetes': 9, 'aws': 8, 'kafka': 8, 'redis': 8,
-            'milvus': 8, 'qdrant': 8, 'mlflow': 7, 'airflow': 7, 'gpc': 6, 'distributed': 8,
-            'python': 5, 'go': 6, 'rust': 7, 'c++': 6, 'scikit-learn': 4,
-        }
-    },
-    "Applied Data Scientist": {
-        "text": """Applied Data Scientist to build customer-facing prediction models and analytics dashboards. Needs hands-on experience in feature engineering, PyTorch, scikit-learn, SQL, NumPy, Pandas, A/B testing, statistical modeling, XGBoost, and LightGBM. HR-tech/marketplace experiences preferred.""",
-        "custom_skills": {
-            'machine learning': 10, 'data scientist': 10, 'python': 8, 'scikit-learn': 8,
-            'xgboost': 8, 'lightgbm': 8, 'pytorch': 7, 'a/b testing': 8, 'pandas': 6,
-            'numpy': 6, 'sql': 6, 'statistical modeling': 8, 'feature engineering': 8,
-            'tensorflow': 5, 'recommendation': 7,
-        }
-    }
-}
-
-def parse_jd_text_local(jd_text):
-    text_lower = jd_text.lower()
-    custom_map = {}
-    all_known = list(CORE_SKILL_MAP.keys()) + ['docker', 'kubernetes', 'aws', 'kafka', 'redis', 'go', 'rust', 'c++', 'airflow', 'distributed', 'sql']
-    for kw in all_known:
-        if kw in text_lower:
-            custom_map[kw] = CORE_SKILL_MAP.get(kw, 8)
-    return custom_map
+# JD_PRESETS and parse_jd_text_local relocated to prevent NameError
 
 # Helper to load sample data automatically
 def load_sample_data():
