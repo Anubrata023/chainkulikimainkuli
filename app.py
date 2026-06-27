@@ -14,15 +14,10 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(__file__))
 
 # Copy landing page asset from config to workspace under the hood
-src_img_hero = r"C:\Users\anubr\.gemini\antigravity-ide\brain\9cfe2755-0ddb-4f4e-b422-e8a1cac3783a\rankcraft_landing_hero_1782545761263.png"
+src_img_hero = r"C:\Users\anubr\.gemini\antigravity-ide\brain\9cfe2755-0ddb-4f4e-b422-e8a1cac3783a\rankcraft_ui_dashboard_1782546895775.png"
 if not os.path.exists("rankcraft_landing_hero.png") and os.path.exists(src_img_hero):
     try:
         shutil.copy(src_img_hero, "rankcraft_landing_hero.png")
-    except Exception:
-        pass
-if not os.path.exists("src/rankcraft_landing_hero.png") and os.path.exists(src_img_hero):
-    try:
-        shutil.copy(src_img_hero, "src/rankcraft_landing_hero.png")
     except Exception:
         pass
 
@@ -162,33 +157,52 @@ if "inspect_id" not in st.session_state:
 if "jd_text_content" not in st.session_state:
     st.session_state["jd_text_content"] = load_jd_text()
 
-# Inject CSS styles
+# Inject Global CSS dark theme overrides
 st.markdown(clean_html("""
 <style>
+    /* Force high-contrast dark space background & override theme settings */
+    .stApp {
+        background-color: #0B0F19 !important;
+        color: #E5E7EB !important;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Make sidebar match midnight theme */
+    [data-testid="stSidebar"] {
+        background-color: #0E131F !important;
+        border-right: 1px solid #1F2937 !important;
+    }
+    
+    /* Subheading styles */
+    h1, h2, h3, h4, h5, h6 {
+        color: #F9FAFB !important;
+        font-family: 'Outfit', sans-serif;
+    }
+    
     .metric-card {
-        background-color: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 18px;
+        background-color: #111827;
+        border: 1px solid #1F2937;
+        border-radius: 12px;
+        padding: 20px;
         margin: 5px 0 15px 0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
     .profile-card {
-        background-color: #0F172A;
-        border: 1px solid #1E293B;
-        border-radius: 12px;
-        padding: 24px;
+        background-color: #0E1320;
+        border: 1px solid #1F2937;
+        border-radius: 16px;
+        padding: 26px;
         margin-top: 10px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
     
     .card-title {
-        color: #F8FAFC;
+        color: #F9FAFB;
         font-size: 18px;
         font-weight: 700;
         margin-bottom: 12px;
-        border-bottom: 1px solid #334155;
+        border-bottom: 1px solid #1F2937;
         padding-bottom: 8px;
     }
     
@@ -202,15 +216,15 @@ st.markdown(clean_html("""
         margin-bottom: 6px;
         text-transform: capitalize;
     }
-    .badge-green { background-color: #064E3B; color: #6EE7B7; border: 1px solid #047857; }
-    .badge-blue { background-color: #1E3A8A; color: #93C5FD; border: 1px solid #1D4ED8; }
-    .badge-orange { background-color: #78350F; color: #FCD34D; border: 1px solid #D97706; }
-    .badge-red { background-color: #7F1D1D; color: #FCA5A5; border: 1px solid #B91C1C; }
-    .badge-grey { background-color: #374151; color: #D1D5DB; border: 1px solid #4B5563; }
-    .badge-purple { background-color: #4C1D95; color: #DDD6FE; border: 1px solid #6D28D9; }
+    .badge-green { background-color: #064E3B; color: #10B981; border: 1px solid #047857; }
+    .badge-blue { background-color: #1E3A8A; color: #3B82F6; border: 1px solid #1D4ED8; }
+    .badge-orange { background-color: #78350F; color: #F59E0B; border: 1px solid #D97706; }
+    .badge-red { background-color: #7F1D1D; color: #EF4444; border: 1px solid #B91C1C; }
+    .badge-grey { background-color: #374151; color: #9CA3AF; border: 1px solid #4B5563; }
+    .badge-purple { background-color: #4C1D95; color: #A78BFA; border: 1px solid #6D28D9; }
     
     .timeline-container {
-        border-left: 2px solid #334155;
+        border-left: 2px solid #1F2937;
         padding-left: 20px;
         margin-left: 10px;
         margin-top: 15px;
@@ -228,7 +242,7 @@ st.markdown(clean_html("""
         height: 12px;
         border-radius: 50%;
         background-color: #3B82F6;
-        border: 2px solid #0F172A;
+        border: 2px solid #0B0F19;
     }
     .timeline-item.current::before {
         background-color: #10B981;
@@ -237,23 +251,23 @@ st.markdown(clean_html("""
     .timeline-title {
         font-weight: 700;
         font-size: 14px;
-        color: #F8FAFC;
+        color: #F9FAFB;
     }
     .timeline-meta {
         font-size: 11px;
-        color: #94A3B8;
+        color: #9CA3AF;
         margin-bottom: 6px;
     }
     .timeline-desc {
         font-size: 12px;
-        color: #CBD5E1;
+        color: #D1D5DB;
         line-height: 1.5;
     }
     
     .section-title {
         font-size: 14px;
         font-weight: bold;
-        color: #94A3B8;
+        color: #9CA3AF;
         text-transform: uppercase;
         margin-top: 15px;
         margin-bottom: 5px;
@@ -306,8 +320,6 @@ def parse_jd_text_local(jd_text):
 def load_sample_data():
     try:
         sample_path = "data/sample.jsonl"
-        if not os.path.exists(sample_path) and os.path.exists("src/data/sample.jsonl"):
-            sample_path = "src/data/sample.jsonl"
         candidates = []
         with open(sample_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -320,16 +332,16 @@ def load_sample_data():
         st.error(f"Failed to load sample dataset: {e}")
 
 # =============================================================================
-# VIEW 1: LANDING PAGE
+# VIEW 1: LANDING PAGE (Futuristic, readable dark theme text and split buttons)
 # =============================================================================
 if st.session_state["view"] == "landing":
     st.markdown(clean_html("""
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-bottom: 2rem;">
-            <div style="font-size: 24px; font-weight: 800; color: #1E293B;">
+            <div style="font-size: 26px; font-weight: 800; color: #F9FAFB; letter-spacing: 0.5px;">
                 RankCraft <span style="color: #FF6B4A;">AI</span>
             </div>
-            <div style="background: rgba(16, 185, 129, 0.05); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
-                🟢 Offline Engine Status: Ready
+            <div style="background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                🟢 Offline AI Swarm Engine: Operational
             </div>
         </div>
     """), unsafe_allow_html=True)
@@ -338,66 +350,67 @@ if st.session_state["view"] == "landing":
     col_hero_text, col_hero_card = st.columns([1.1, 0.9])
     
     with col_hero_text:
-        st.markdown("<h4 style='color: #FF6B4A; font-weight: 700; margin-bottom: 10px;'>OFFLINE TALENT INTELLIGENCE SUITE</h4>", unsafe_allow_html=True)
-        st.markdown("<h1 style='font-size: 52px; font-weight: 800; color: #1E293B; line-height: 1.1;'>Talent Acquisition,<br>Decoded.<br><span style='color:#FF6B4A;'>Consensus-Based</span> Ranking.</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 16px; color: #64748B; margin: 1.5rem 0 2rem 0; line-height: 1.6;'>RankCraft is a self-hosted candidate intelligence engine that scores and inspects engineering talent with zero-trust security audits, graph-based skill alignment, and multi-agent swarm orchestration.</p>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #FF6B4A; font-weight: 700; margin-bottom: 12px; letter-spacing: 1px;'>OFFLINE TALENT INTELLIGENCE SUITE</h4>", unsafe_allow_html=True)
+        st.markdown("<h1 style='font-size: 54px; font-weight: 800; color: #F9FAFB; line-height: 1.15; margin-bottom: 1rem;'>Talent Acquisition,<br>Decoded.<br><span style='color:#FF6B4A;'>Consensus-Based</span> Ranking.</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 16.5px; color: #9CA3AF; margin: 1.5rem 0 2rem 0; line-height: 1.6;'>RankCraft is a self-hosted candidate intelligence engine that scores and inspects engineering talent with zero-trust security audits, graph-based skill alignment, and multi-agent swarm orchestration.</p>", unsafe_allow_html=True)
         
+        # Action buttons with unique sensible behaviors
         btn_col1, btn_col2 = st.columns([1, 1.2])
-        if btn_col1.button("Start Free Trial 🚀", use_container_width=True, type="primary"):
+        if btn_col1.button("🚀 Load standard pool", use_container_width=True, type="primary"):
             load_sample_data()
             st.session_state["view"] = "workspace"
+            st.session_state["sandbox_mode"] = False
             st.rerun()
-        if btn_col2.button("Enter Demo Workspace 🧠", use_container_width=True):
-            st.toast("Preloading demonstration data...")
+            
+        if btn_col2.button("🧠 Enter swarm agent sandbox", use_container_width=True):
             load_sample_data()
             st.session_state["view"] = "workspace"
+            st.session_state["sandbox_mode"] = True
             st.rerun()
+            
+        if "sandbox_mode" in st.session_state and st.session_state["sandbox_mode"]:
+            st.success("Welcome to the Swarm Agent Sandbox! All weights and modifiers are automatically set to target senior roles.")
             
     with col_hero_card:
-        # Render the custom vector dashboard illustration
-        img_path = "rankcraft_landing_hero.png"
-        if os.path.exists("src/rankcraft_landing_hero.png"):
-            img_path = "src/rankcraft_landing_hero.png"
-            
-        if os.path.exists(img_path):
-            st.image(img_path, use_container_width=True)
+        if os.path.exists("rankcraft_landing_hero.png"):
+            st.image("rankcraft_landing_hero.png", use_container_width=True)
         else:
             st.markdown(clean_html("""
-                <div style="background: white; border-radius: 24px; padding: 4rem 2rem; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03);">
+                <div style="background: #111827; border-radius: 24px; padding: 4rem 2rem; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid #1F2937;">
                     <div style="font-size: 64px; margin-bottom: 1rem;">📊</div>
-                    <div style="font-weight: 700; font-size: 18px; color: #1E293B; margin-bottom: 5px;">Offline Candidate Analytics</div>
-                    <div style="font-size: 13px; color: #64748B;">Semantic clustering, Honeypots tracking and scoring</div>
+                    <div style="font-weight: 700; font-size: 18px; color: #F9FAFB; margin-bottom: 5px;">Offline Candidate Analytics</div>
+                    <div style="font-size: 13px; color: #9CA3AF;">Semantic clustering, Honeypots tracking and scoring</div>
                 </div>
             """), unsafe_allow_html=True)
 
-    st.markdown("<br><hr style='border: 0; border-top: 1px solid #E2E8F0;'><br>", unsafe_allow_html=True)
+    st.markdown("<br><hr style='border: 0; border-top: 1px solid #1F2937;'><br>", unsafe_allow_html=True)
     st.markdown("<h4 style='text-align: center; color: #FF6B4A; font-weight: 700;'>ARCHITECTURE</h4>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; font-weight: 800; color: #1E293B; margin-bottom: 3rem;'>Architected for Extreme Efficiency</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 800; color: #F9FAFB; margin-bottom: 3rem;'>Architected for Extreme Efficiency</h2>", unsafe_allow_html=True)
 
     # Feature Grid
     f_col1, f_col2, f_col3 = st.columns(3)
     with f_col1:
         st.markdown(clean_html("""
-            <div style="background: white; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.01); border: 1px solid rgba(0,0,0,0.03);">
+            <div style="background: #111827; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid #1F2937;">
                 <div style="font-size: 28px; margin-bottom: 1rem;">🔀</div>
-                <h4 style="font-weight: 700; color: #1E293B; margin-bottom: 8px;">Two-Stage Local Pipeline</h4>
-                <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Processes raw candidate JSON/JSONL datasets securely on-site, minimizing data transit risks and maximizing pipeline throughput.</p>
+                <h4 style="font-weight: 700; color: #F9FAFB; margin-bottom: 8px;">Two-Stage Local Pipeline</h4>
+                <p style="color: #9CA3AF; font-size: 13px; line-height: 1.5;">Processes raw candidate JSON/JSONL datasets securely on-site, minimizing data transit risks and maximizing pipeline throughput.</p>
             </div>
         """), unsafe_allow_html=True)
     with f_col2:
         st.markdown(clean_html("""
-            <div style="background: white; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.01); border: 1px solid rgba(0,0,0,0.03);">
+            <div style="background: #111827; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid #1F2937;">
                 <div style="font-size: 28px; margin-bottom: 1rem;">🛡️</div>
-                <h4 style="font-weight: 700; color: #1E293B; margin-bottom: 8px;">The Honeypot Auditor</h4>
-                <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Proprietary zero-trust logic designed to flag and isolate synthetic profiles, 0-month expert claims, and AI-hallucinated details.</p>
+                <h4 style="font-weight: 700; color: #F9FAFB; margin-bottom: 8px;">The Honeypot Auditor</h4>
+                <p style="color: #9CA3AF; font-size: 13px; line-height: 1.5;">Proprietary zero-trust logic designed to flag and isolate synthetic profiles, 0-month expert claims, and AI-hallucinated details.</p>
             </div>
         """), unsafe_allow_html=True)
     with f_col3:
         st.markdown(clean_html("""
-            <div style="background: white; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.01); border: 1px solid rgba(0,0,0,0.03);">
+            <div style="background: #111827; border-radius: 16px; padding: 2rem; height: 260px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid #1F2937;">
                 <div style="font-size: 28px; margin-bottom: 1rem;">🔌</div>
-                <h4 style="font-weight: 700; color: #1E293B; margin-bottom: 8px;">Offline Edge Engine</h4>
-                <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Run high-complexity matching algorithms locally with zero cloud costs. The pipeline scales vertically on standard laptop and server CPUs.</p>
+                <h4 style="font-weight: 700; color: #F9FAFB; margin-bottom: 8px;">Offline Edge Engine</h4>
+                <p style="color: #9CA3AF; font-size: 13px; line-height: 1.5;">Run high-complexity matching algorithms locally with zero cloud costs. The pipeline scales vertically on standard laptop and server CPUs.</p>
             </div>
         """), unsafe_allow_html=True)
 
@@ -405,20 +418,20 @@ if st.session_state["view"] == "landing":
 
     # Waveform Section
     st.markdown(clean_html("""
-        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.03);">
+        <div style="background: #111827; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #1F2937;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div>
                     <span style="font-size: 11px; font-weight: 700; color: #FF6B4A; letter-spacing: 1px;">LIVE ANALYTICS</span>
-                    <h3 style="font-weight: 800; color: #1E293B; margin-top: 5px; margin-bottom: 0;">System Performance Waveform</h3>
+                    <h3 style="font-weight: 800; color: #F9FAFB; margin-top: 5px; margin-bottom: 0;">System Performance Waveform</h3>
                 </div>
                 <div style="display: flex; gap: 3rem;">
                     <div>
-                        <span style="font-size: 12px; color: #64748B;">ACCURACY RATE</span>
-                        <div style="font-size: 24px; font-weight: 800; color: #D32F2F; margin-top: 2px;">98% / 98.4% Match</div>
+                        <span style="font-size: 12px; color: #9CA3AF;">ACCURACY RATE</span>
+                        <div style="font-size: 24px; font-weight: 800; color: #FF6B4A; margin-top: 2px;">98% / 98.4% Match</div>
                     </div>
                     <div>
-                        <span style="font-size: 12px; color: #64748B;">PROCESSING SPEED</span>
-                        <div style="font-size: 24px; font-weight: 800; color: #1E293B; margin-top: 2px;">14ms Latency</div>
+                        <span style="font-size: 12px; color: #9CA3AF;">PROCESSING SPEED</span>
+                        <div style="font-size: 24px; font-weight: 800; color: #F9FAFB; margin-top: 2px;">14ms Latency</div>
                     </div>
                 </div>
             </div>
@@ -436,6 +449,20 @@ if st.session_state["view"] == "landing":
 # VIEW 2: CLASSIC SPACIOUS RECRUITER WORKSPACE
 # =============================================================================
 else:
+    # Set default values if sandbox mode is clicked
+    init_title = 1.0
+    init_career = 1.0
+    init_skills = 1.0
+    init_experience = 1.0
+    init_location = 1.0
+    init_semantic = 1.0
+    
+    if "sandbox_mode" in st.session_state and st.session_state["sandbox_mode"]:
+        init_title = 1.5
+        init_career = 1.2
+        init_skills = 1.4
+        init_experience = 0.8
+        
     # ── SIDEBAR CONTROLS ─────────────────────────────────────────────────────
     st.sidebar.markdown("<h2 style='color:#FF6B4A;margin-top:0;'>RankCraft</h2>", unsafe_allow_html=True)
     if st.sidebar.button("⬅️ Home Menu"):
@@ -518,12 +545,12 @@ else:
 
     # Calibration Sliders
     st.sidebar.header("⚙️ Score Component Calibration")
-    weight_title = st.sidebar.slider("Role Title Fit Weight", 0.0, 2.0, 1.0, 0.1)
-    weight_career = st.sidebar.slider("Career History Weight", 0.0, 2.0, 1.0, 0.1)
-    weight_skills = st.sidebar.slider("Skills Trust Weight", 0.0, 2.0, 1.0, 0.1)
-    weight_experience = st.sidebar.slider("Experience Band Weight", 0.0, 2.0, 1.0, 0.1)
-    weight_location = st.sidebar.slider("Location Pref Weight", 0.0, 2.0, 1.0, 0.1)
-    weight_semantic = st.sidebar.slider("Semantic Alignment Weight", 0.0, 2.0, 1.0, 0.1)
+    weight_title = st.sidebar.slider("Role Title Fit Weight", 0.0, 2.0, init_title, 0.1)
+    weight_career = st.sidebar.slider("Career History Weight", 0.0, 2.0, init_career, 0.1)
+    weight_skills = st.sidebar.slider("Skills Trust Weight", 0.0, 2.0, init_skills, 0.1)
+    weight_experience = st.sidebar.slider("Experience Band Weight", 0.0, 2.0, init_experience, 0.1)
+    weight_location = st.sidebar.slider("Location Pref Weight", 0.0, 2.0, init_location, 0.1)
+    weight_semantic = st.sidebar.slider("Semantic Alignment Weight", 0.0, 2.0, init_semantic, 0.1)
     skills_score_cap = st.sidebar.slider("Max Skill Score Cap", 10.0, 40.0, 25.0, 1.0)
 
     st.sidebar.markdown("---")
@@ -563,8 +590,17 @@ else:
     }
 
     # ── MAIN WORKSPACE PANEL ─────────────────────────────────────────────────
-    st.title("🧠 RankCraft AI Candidate Discovery & Ranking Workbench")
-    st.caption("Advanced AI Recruiter Sandbox — calibrate scoring weights, verify filters, and explore the talent pool")
+    st.markdown("""
+        <div style='display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1F2937; padding-bottom:10px; margin-bottom:20px;'>
+            <div>
+                <h1 style='margin:0; font-size:28px;'>🧠 RankCraft Candidate Discovery Workbench</h1>
+                <p style='margin:2px 0 0 0; color:#9CA3AF; font-size:13px;'>Consensus-Based Multi-Agent Swarm Recruiter Interface</p>
+            </div>
+            <div style='text-align:right;'>
+                <span style='background:rgba(255,107,74,0.1); border:1px solid #FF6B4A; color:#FF6B4A; padding:6px 14px; border-radius:30px; font-size:12px; font-weight:600;'>Swarm Status: Active</span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     active_pool = st.session_state["candidate_pool"]
     if not active_pool:
@@ -661,19 +697,19 @@ else:
             col1, col2, col3 = st.columns(3)
             col1.markdown(clean_html(f"""
             <div class="metric-card">
-                <h5 style="color:#94A3B8;margin:0 0 5px 0;font-size:12px;">TOTAL POOL LOADED</h5>
-                <h2 style="color:#F8FAFC;margin:0;font-size:32px;font-weight:700;">{len(active_pool)}</h2>
+                <h5 style="color:#9CA3AF;margin:0 0 5px 0;font-size:12px;">TOTAL POOL LOADED</h5>
+                <h2 style="color:#F9FAFB;margin:0;font-size:32px;font-weight:700;">{len(active_pool)}</h2>
             </div>
             """), unsafe_allow_html=True)
             col2.markdown(clean_html(f"""
             <div class="metric-card">
-                <h5 style="color:#94A3B8;margin:0 0 5px 0;font-size:12px;">SHORTLISTED & SCORED</h5>
+                <h5 style="color:#9CA3AF;margin:0 0 5px 0;font-size:12px;">SHORTLISTED & SCORED</h5>
                 <h2 style="color:#10B981;margin:0;font-size:32px;font-weight:700;">{len(scored)}</h2>
             </div>
             """), unsafe_allow_html=True)
             col3.markdown(clean_html(f"""
             <div class="metric-card">
-                <h5 style="color:#94A3B8;margin:0 0 5px 0;font-size:12px;">HONEYPOTS FILTERED</h5>
+                <h5 style="color:#9CA3AF;margin:0 0 5px 0;font-size:12px;">HONEYPOTS FILTERED</h5>
                 <h2 style="color:#EF4444;margin:0;font-size:32px;font-weight:700;">{len(honeypots)}</h2>
             </div>
             """), unsafe_allow_html=True)
@@ -943,6 +979,31 @@ else:
                         """
                     timeline_html += "</div>"
                     
+                    # Live Outreach Swarm Drafter Widget
+                    first_name = p["anonymized_name"].split()[0]
+                    tone_key = f"outreach_tone_classic_{inspect_id}"
+                    st.markdown("<div class='section-title'>✉️ Swarm Outreach Drafter</div>", unsafe_allow_html=True)
+                    outreach_tone = st.selectbox(
+                        "Configure Outreach Communication Tone",
+                        ["Highly Technical & Direct", "Warm & Personal", "Brief LinkedIn Connection Request"],
+                        key=tone_key
+                    )
+                    
+                    if outreach_tone == "Highly Technical & Direct":
+                        top_skill = list(candidate_skills_dict.keys())[0].upper() if candidate_skills_dict else "APPLIED ML"
+                        draft_text = f"Hi {first_name},\n\nI was looking through your ML work. Given your hands-on expertise with {top_skill} at {p['current_company']}, I think you'd be interested in our Senior AI role. Pune/Noida hybrid, sub-30d notice. Let me know if you are open to chat.\n\nBest,\nJordan"
+                    elif outreach_tone == "Warm & Personal":
+                        draft_text = f"Hello {first_name},\n\nHope you're having a great week! I was super impressed by your trajectory, particularly your {p['years_of_experience']:.0f} years of engineering experience. We are building the founding AI team at RankCraft AI and would love to jump on a quick call to share our vision. Let me know what your schedule looks like.\n\nBest regards,\nJordan Dawson"
+                    else:
+                        draft_text = f"Hi {first_name} - came across your background at {p['current_company']} and noticed your solid skill profile. We are hiring a Founding AI/ML Engineer. Let's connect!"
+                    
+                    outreach_box_html = f"""
+                    <div style="background-color:#1E293B; border-radius:6px; padding:12px; margin-top:8px; border:1px solid #334155;">
+                        <pre style="color:#F9FAFB; font-size:12px; font-family:'Courier New', monospace; white-space:pre-wrap; margin:0;">{draft_text}</pre>
+                    </div>
+                    """
+                    st.markdown(outreach_box_html, unsafe_allow_html=True)
+
                     inspector_card_html = textwrap.dedent(f"""
                     <div class="profile-card">
                         <div class="card-title">🔍 Candidate Profile Inspector: {insp_row["candidate_id"]}</div>
