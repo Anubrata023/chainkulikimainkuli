@@ -383,22 +383,14 @@ if st.session_state["view"] == "landing":
     col_hero_text, col_hero_card = st.columns([1.1, 0.9])
     
     with col_hero_text:
-        st.markdown("<h4 style='color: #FF6B4A; font-weight: 700; margin-bottom: 12px; letter-spacing: 1px;'>OFFLINE TALENT INTELLIGENCE SUITE</h4>", unsafe_allow_html=True)
-        st.markdown("<h1 style='font-size: 54px; font-weight: 800; color: #1E293B; line-height: 1.15; margin-bottom: 1rem;'>Talent Acquisition,<br>Decoded.<br><span style='color:#FF6B4A;'>Consensus-Based</span> Ranking.</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='font-size: 54px; font-weight: 800; color: #1E293B; line-height: 1.15; margin-bottom: 1rem;'>Hiring Smarter,<br>Not Harder.<br><span style='color:#FF6B4A;'>Intent-Driven</span><br>Candidate Ranking.</h1>", unsafe_allow_html=True)
         st.markdown("<p style='font-size: 16.5px; color: #475569; margin: 1.5rem 0 2rem 0; line-height: 1.6;'>RankCraft is a self-hosted candidate intelligence engine that scores and inspects engineering talent with zero-trust security audits, graph-based skill alignment, and multi-agent swarm orchestration.</p>", unsafe_allow_html=True)
         
-        # Action buttons with unique sensible behaviors
-        btn_col1, btn_col2 = st.columns([1, 1.2])
-        if btn_col1.button("🚀 Load standard pool", use_container_width=True, type="primary"):
+        # Action button to enter candidate intelligence workspace
+        if st.button("🚀 Enter Candidate Intelligence Workspace", use_container_width=True, type="primary"):
             load_sample_data()
             st.session_state["view"] = "workspace"
             st.session_state["sandbox_mode"] = False
-            st.rerun()
-            
-        if btn_col2.button("🧠 Enter swarm agent sandbox", use_container_width=True):
-            load_sample_data()
-            st.session_state["view"] = "workspace"
-            st.session_state["sandbox_mode"] = True
             st.rerun()
             
     with col_hero_card:
